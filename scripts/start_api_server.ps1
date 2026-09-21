@@ -142,11 +142,16 @@ if (-not $Model) {
 }
 
 $Port = if ($env:PORT) { $env:PORT } elseif ($env:BONSAI_PORT) { $env:BONSAI_PORT } else { "8080" }
-$HostAddress = if ($env:HOST) { $env:HOST } elseif ($env:BONSAI_HOST) { $env:BONSAI_HOST } else { "127.0.0.1" }
+$HostAddress = if ($env:HOST) { $env:HOST } elseif ($env:BONSAI_HOST) { $env:BONSAI_HOST } else { "0.0.0.0" }
 $Ctx = if ($env:CTX) { $env:CTX } elseif ($env:BONSAI_CTX) { $env:BONSAI_CTX } else { "131072" }
 $Ngl = if ($env:NGL) { $env:NGL } elseif ($env:BONSAI_NGL) { $env:BONSAI_NGL } else { "99" }
 
 $Np = if ($env:NP) { $env:NP } else { "4" }
+
+# Detecta os IPs locais e de rede privada (ex: Tailscale) para acesso no Mac / iPhone
+$netIps = @(Get-NetIPAddress -AddressFamily IPv4 -ErrorAction SilentlyContinue | Where-Object { $_.InterfaceAlias -notmatch "Loopback|vEthernet" -and $_.IPAddress -notlike "169.254*" })
+$lanIp = ($netIps | Where-Object { $_.InterfaceAlias -notmatch "Tailscale|Virtual|Loopback" -and $_.IPAddress -ne "192.168.56.1" } | Select-Object -First 1).IPAddress
+$tailscaleIp = ($netIps | Where-Object { $_.InterfaceAlias -match "Tailscale" } | Select-Object -First 1).IPAddress
 
 # -np 4 --kv-unified: 4 slots simultaneos para suportar sub-agentes com pool unificado dinamico
 # KV4: Cache Q4_0 reduz o uso de VRAM em 3.5x permitindo 128k context em GPUs de 8GB
@@ -182,8 +187,15 @@ Write-Host "  Slots:     -np $Np (Pool KV Unificado: suporte a sub-agentes e mul
 Write-Host "  Contexto:  -c $Ctx (128k com Flash Attention e KV Cache 4-bit)" -ForegroundColor Green
 Write-Host "  WebUI:     Desativada (--no-webui para maxima performance)" -ForegroundColor Green
 Write-Host ""
-Write-Host "  Endpoint:  http://${HostAddress}:${Port}/v1/chat/completions" -ForegroundColor Yellow
-Write-Host "  Modelos:   http://${HostAddress}:${Port}/v1/models" -ForegroundColor Yellow
+Write-Host "  Endpoints da API:" -ForegroundColor Cyan
+Write-Host "    - Local (neste PC):   http://127.0.0.1:${Port}/v1" -ForegroundColor Yellow
+if ($lanIp) {
+    Write-Host "    - Rede Wi-Fi (Mac):   http://${lanIp}:${Port}/v1" -ForegroundColor Yellow
+}
+if ($tailscaleIp) {
+    Write-Host "    - Tailscale (iPhone): http://${tailscaleIp}:${Port}/v1" -ForegroundColor Yellow
+}
+Write-Host ""
 Write-Host "  Pressione Ctrl+C ou feche a janela para parar." -ForegroundColor Gray
 Write-Host ""
 
