@@ -119,25 +119,31 @@ $Alias = "default"
 if ($env:MODEL_PATH -and (Test-Path $env:MODEL_PATH)) {
     $Model = $env:MODEL_PATH
 } else {
-    # Prioriza OmniCoder, ou qualquer modelo GGUF presente
-    $omni = Get-ChildItem -Path (Join-Path $DemoDir "models") -Filter "*omnicoder*.gguf" -Recurse -File -ErrorAction SilentlyContinue | Select-Object -First 1
-    if ($omni) {
-        $Model = $omni.FullName
-        $Alias = "OmniCoder-9B"
+    # Prioriza OmniCoder-2, OmniCoder, ou qualquer modelo GGUF presente
+    $omni2 = Get-ChildItem -Path (Join-Path $DemoDir "models") -Filter "*omnicoder-2*.gguf" -Recurse -File -ErrorAction SilentlyContinue | Select-Object -First 1
+    if ($omni2) {
+        $Model = $omni2.FullName
+        $Alias = "OmniCoder-2-9B"
     } else {
-        $anyGguf = Get-ChildItem -Path (Join-Path $DemoDir "models") -Filter "*.gguf" -Recurse -File -ErrorAction SilentlyContinue |
-            Where-Object { $_.Name -notlike "*mmproj*" -and $_.Name -notlike "*dspark*" } |
-            Select-Object -First 1
-        if ($anyGguf) {
-            $Model = $anyGguf.FullName
-            $Alias = [System.IO.Path]::GetFileNameWithoutExtension($anyGguf.Name)
+        $omni = Get-ChildItem -Path (Join-Path $DemoDir "models") -Filter "*omnicoder*.gguf" -Recurse -File -ErrorAction SilentlyContinue | Select-Object -First 1
+        if ($omni) {
+            $Model = $omni.FullName
+            $Alias = "OmniCoder-9B"
+        } else {
+            $anyGguf = Get-ChildItem -Path (Join-Path $DemoDir "models") -Filter "*.gguf" -Recurse -File -ErrorAction SilentlyContinue |
+                Where-Object { $_.Name -notlike "*mmproj*" -and $_.Name -notlike "*dspark*" } |
+                Select-Object -First 1
+            if ($anyGguf) {
+                $Model = $anyGguf.FullName
+                $Alias = [System.IO.Path]::GetFileNameWithoutExtension($anyGguf.Name)
+            }
         }
     }
 }
 
 if (-not $Model) {
     Write-Host "[ERR] Nenhum modelo .gguf encontrado na pasta models\." -ForegroundColor Red
-    Write-Host "      Baixe um modelo (ex: OmniCoder) ou execute .\setup.ps1." -ForegroundColor Yellow
+    Write-Host "      Baixe um modelo (ex: OmniCoder-2) ou execute .\setup.ps1." -ForegroundColor Yellow
     exit 1
 }
 
@@ -158,7 +164,7 @@ $tailscaleIp = ($netIps | Where-Object { $_.InterfaceAlias -match "Tailscale" } 
 # --no-webui: Desativa a interface web e proxies pesados
 $ServerArgs = @(
     "-m", $Model,
-    "--alias", "$Alias,default",
+    "--alias", "$Alias,default,OmniCoder-9B,OmniCoder-2-9B",
     "--host", $HostAddress,
     "--port", "$Port",
     "-ngl", $Ngl,

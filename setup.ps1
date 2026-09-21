@@ -141,22 +141,22 @@ if ($GpuType -eq "cuda") {
     Download-Zip "$BaseUrl/llama-${ReleaseTag}-bin-win-cpu-x64.zip" $BinDir "llama-server.exe"
 }
 
-# ── 6. Baixar Modelo Padrao (OmniCoder-9B) ──
-$ModelDir = Join-Path $PSScriptRoot "models\omnicoder"
+# ── 6. Baixar Modelo Padrao (OmniCoder-2-9B) ──
+$ModelDir = Join-Path $PSScriptRoot "models\omnicoder2"
 New-Item -ItemType Directory -Path $ModelDir -Force | Out-Null
-$ModelFile = Join-Path $ModelDir "omnicoder-9b-q3_k_m.gguf"
+$ModelFile = Join-Path $ModelDir "OmniCoder-2-9B.Q3_K_M.gguf"
 
 if (Test-Path $ModelFile) {
-    Write-Host "[OK] Modelo OmniCoder-9B ja presente em models\omnicoder\" -ForegroundColor Green
+    Write-Host "[OK] Modelo OmniCoder-2-9B ja presente em models\omnicoder2\" -ForegroundColor Green
 } else {
-    Write-Host "==> Baixando modelo OmniCoder-9B (Tesslate/OmniCoder-9B-GGUF) ..." -ForegroundColor Cyan
+    Write-Host "==> Baixando modelo OmniCoder-2-9B (mradermacher/OmniCoder-2-9B-GGUF) ..." -ForegroundColor Cyan
     $HfCli = Join-Path $VenvDir "Scripts\hf.exe"
-    & $HfCli download Tesslate/OmniCoder-9B-GGUF omnicoder-9b-q3_k_m.gguf --local-dir $ModelDir
+    & $HfCli download mradermacher/OmniCoder-2-9B-GGUF OmniCoder-2-9B.Q3_K_M.gguf --local-dir $ModelDir
     if ($LASTEXITCODE -ne 0) {
         Write-Host "[ERR] Falha no download do modelo." -ForegroundColor Red
         exit 1
     }
-    Write-Host "[OK] OmniCoder-9B baixado com sucesso!" -ForegroundColor Green
+    Write-Host "[OK] OmniCoder-2-9B baixado com sucesso!" -ForegroundColor Green
 }
 
 # ── 7. Criar Atalho na Area de Trabalho ──
