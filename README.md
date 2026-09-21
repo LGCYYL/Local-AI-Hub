@@ -61,11 +61,12 @@ Você pode iniciar o servidor de duas formas:
 
 | Flag / Otimização | Função | Benefício Real |
 | :--- | :--- | :--- |
-| **`-np 1` (Single Slot)** | Aloca buffer para apenas 1 requisição concorrente. | Impede o backend de multiplicar o uso de memória por 4 slots ociosos. |
+| **`-np 4 --kv-unified`** | 4 slots com Pool KV Unificado dinâmico. | Suporta sub-agentes, memória e chamadas concorrentes sem dividir ou estourar a VRAM. |
 | **`--cache-type-k q4_0` / `v q4_0`** | Comprime o KV Cache de contexto em 4-bit. | Reduz o custo de VRAM por token em **3.5x**, permitindo 128k de contexto em placas de 8 GB. |
 | **`-fa on` (Flash Attention)** | Ativa atenção vetorizada dinâmica. | O contexto só consome a memória que o prompt realmente utiliza no momento. |
 | **`--no-webui`** | Desativa servidores web internos e proxies CORS. | Zero consumo desnecessário de CPU e memória RAM do sistema. |
 | **Auto-Kill de Zumbis** | Encerra instâncias antigas antes de inicializar. | Garante que o cliente sempre conecte na instância ativa e correta. |
+| **Windows Job Object** | Kernel monitora encerramento da janela. | Ao fechar no `[X]` ou `Ctrl+C`, o Windows mata o processo do backend na hora. |
 
 ---
 

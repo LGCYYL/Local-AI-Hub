@@ -146,7 +146,9 @@ $HostAddress = if ($env:HOST) { $env:HOST } elseif ($env:BONSAI_HOST) { $env:BON
 $Ctx = if ($env:CTX) { $env:CTX } elseif ($env:BONSAI_CTX) { $env:BONSAI_CTX } else { "131072" }
 $Ngl = if ($env:NGL) { $env:NGL } elseif ($env:BONSAI_NGL) { $env:BONSAI_NGL } else { "99" }
 
-# -np 1: Slot unico (evita alocacao de multiplos buffers de contexto)
+$Np = if ($env:NP) { $env:NP } else { "4" }
+
+# -np 4 --kv-unified: 4 slots simultaneos para suportar sub-agentes com pool unificado dinamico
 # KV4: Cache Q4_0 reduz o uso de VRAM em 3.5x permitindo 128k context em GPUs de 8GB
 # --no-webui: Desativa a interface web e proxies pesados
 $ServerArgs = @(
@@ -157,7 +159,8 @@ $ServerArgs = @(
     "-ngl", $Ngl,
     "-fa", "on",
     "-c", $Ctx,
-    "-np", "1",
+    "-np", $Np,
+    "--kv-unified",
     "--cache-type-k", "q4_0",
     "--cache-type-v", "q4_0",
     "--no-webui",
@@ -175,7 +178,7 @@ Write-Host "==========================================================" -Foregro
 Write-Host "  Modelo:    $Model" -ForegroundColor Green
 Write-Host "  Alias:     $Alias (acessivel tambem como 'default')" -ForegroundColor Green
 Write-Host "  GPU:       -ngl $Ngl (100% VRAM na GPU)" -ForegroundColor Green
-Write-Host "  Slots:     -np 1 (Uso otimizado de memoria, sem slots extras)" -ForegroundColor Green
+Write-Host "  Slots:     -np $Np (Pool KV Unificado: suporte a sub-agentes e multi-turnos)" -ForegroundColor Green
 Write-Host "  Contexto:  -c $Ctx (128k com Flash Attention e KV Cache 4-bit)" -ForegroundColor Green
 Write-Host "  WebUI:     Desativada (--no-webui para maxima performance)" -ForegroundColor Green
 Write-Host ""

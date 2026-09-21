@@ -8,7 +8,7 @@ This document provides concise, structured operational guidelines for AI coding 
 * **Engine:** Precompiled `llama.cpp` Windows binaries with CUDA 13.3 / 12.4 acceleration and Flash Attention.
 * **Format:** Universal `.gguf` weights.
 * **API Protocol:** Strict OpenAI specification (`/v1/chat/completions`, `/v1/models`).
-* **Context Engine:** 128,000 tokens default (`131072`), optimized for 8 GB VRAM via 4-bit KV Cache (`--cache-type-k q4_0 --cache-type-v q4_0`) and Single-Slot (`-np 1`).
+* **Context Engine:** 128,000 tokens default (`131072`), optimized for 8 GB VRAM via 4-bit KV Cache (`--cache-type-k q4_0 --cache-type-v q4_0`), 4 parallel slots (`-np 4`), and a Unified KV Buffer (`--kv-unified`) supporting simultaneous sub-agent queries without VRAM duplication.
 * **Process Lifecycle:** Bound to a Windows OS Kernel **Job Object** (`JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE`). Terminating the console window or pressing `Ctrl+C` immediately frees all VRAM and RAM without leaving orphan processes.
 
 ---
