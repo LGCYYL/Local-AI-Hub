@@ -1,0 +1,11 @@
+[project]
+name = "local-ai-hub"
+version = "1.0.0"
+description = "Local AI Hub - LEG3NDY: High-performance local OpenAI-compatible API"
+requires-python = ">=3.10"
+dependencies = [
+    "huggingface-hub>=1.5.0",
+]
+
+[tool.setuptools]
+packages = []
