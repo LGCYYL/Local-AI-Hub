@@ -99,6 +99,23 @@ public class ProcessJobTracker {
         return false;
     }
 }
+
+public class SleepPreventer {
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern uint SetThreadExecutionState(uint esFlags);
+
+    private const uint ES_CONTINUOUS = 0x80000000;
+    private const uint ES_SYSTEM_REQUIRED = 0x00000001;
+    private const uint ES_AWAYMODE_REQUIRED = 0x00000040;
+
+    public static uint PreventSleep() {
+        return SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_AWAYMODE_REQUIRED);
+    }
+
+    public static uint AllowSleep() {
+        return SetThreadExecutionState(ES_CONTINUOUS);
+    }
+}
 "@ -ErrorAction SilentlyContinue
 
 function Format-CommandLineArgs([string[]]$Arguments) {
@@ -192,6 +209,7 @@ Write-Host "  GPU:       -ngl $Ngl (100% VRAM na GPU)" -ForegroundColor Green
 Write-Host "  Slots:     -np $Np (Pool KV Unificado: suporte a sub-agentes e multi-turnos)" -ForegroundColor Green
 Write-Host "  Contexto:  -c $Ctx (128k com Flash Attention e KV Cache 4-bit)" -ForegroundColor Green
 Write-Host "  WebUI:     Desativada (--no-webui para maxima performance)" -ForegroundColor Green
+Write-Host "  Anti-Sleep: Ativo (o PC nao suspende; monitor desliga normalmente)" -ForegroundColor Green
 Write-Host ""
 Write-Host "  Endpoints da API:" -ForegroundColor Cyan
 Write-Host "    - Local (neste PC):   http://127.0.0.1:${Port}/v1" -ForegroundColor Yellow
@@ -207,6 +225,9 @@ Write-Host ""
 
 $BinDir = Split-Path $Bin -Parent
 $env:Path = "$BinDir;$env:Path"
+
+# Impede o Windows de suspender/hibernar enquanto o servidor estiver rodando
+[SleepPreventer]::PreventSleep() | Out-Null
 
 $psi = New-Object System.Diagnostics.ProcessStartInfo
 $psi.FileName = $Bin
@@ -224,5 +245,10 @@ try {
         try { $proc.Kill() } catch {}
     }
     Get-Process llama-server -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+    
+    # Restaura o comportamento padrao de suspensao do Windows
+    [SleepPreventer]::AllowSleep() | Out-Null
+    
     Write-Host "`n[OK] Servidor finalizado e recursos de GPU/VRAM liberados." -ForegroundColor Yellow
+    Write-Host "[OK] Modo de suspensao do Windows restaurado." -ForegroundColor Yellow
 }
